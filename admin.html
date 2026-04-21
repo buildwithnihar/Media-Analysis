@@ -1,0 +1,1109 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Security headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="no-referrer" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+
+    <!-- Content Security Policy: local assets only -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+          default-src 'self';
+          script-src  'self' 'unsafe-inline';
+          style-src   'self' 'unsafe-inline';
+          img-src     'self' data:;
+          connect-src 'self';
+          font-src    'self';
+          object-src  'none';
+          base-uri    'self';
+          form-action 'self';
+        "
+    />
+
+    <title>Admin Panel - Workflow Pattern Manager</title>
+
+    <link rel="stylesheet" href="css/admin.css" />
+    <link rel="stylesheet" href="assets/vendor/tom-select.css" />
+  </head>
+  <body class="admin-page">
+    <!-- ============================================================
+     LOGIN SCREEN
+============================================================= -->
+    <div id="adminLoginSection" class="login-container">
+      <h2>🔐 Admin Login</h2>
+      <p class="sub-info">Restricted Access</p>
+
+      <input type="password" id="adminPIN" placeholder="Enter Admin PIN" />
+      <p id="pinError"></p>
+
+      <div class="login-btn-group">
+        <button id="loginBtn" class="primary-btn">Login</button>
+        <button id="cancelBtn" class="secondary-btn">Cancel</button>
+      </div>
+    </div>
+
+    <!-- ============================================================
+     ADMIN APP
+============================================================= -->
+    <div id="adminApp" class="admin-app" style="display: none">
+      <!-- Sidebar -->
+      <aside class="admin-sidebar">
+        <div class="app-title-side">Admin Workflow Manager</div>
+
+        <div class="sidebar-title-row">
+          <h3 class="brand" id="sidebarAdminName">Admin</h3>
+          <button
+            id="toggleSidebarBtn"
+            class="sidebar-toggle right-only"
+            aria-label="Toggle Sidebar"
+          >
+            ☰
+          </button>
+        </div>
+
+        <nav>
+          <button id="navDashboard" class="nav-item active">
+            📊 Dashboard
+          </button>
+          <button id="navWorkflow" class="nav-item">📁 Workflows</button>
+          <button id="navScan" class="nav-item">⚙ Scan Settings</button>
+          <button id="navAudit" class="nav-item">🧾 Audit Logs</button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <button id="sidebarLogoutBtn" class="sidebar-logout">
+            🚪 Logout
+          </button>
+        </div>
+      </aside>
+
+      <!-- Main content area -->
+      <div class="admin-main">
+        <!-- ==========================================================
+         WELCOME / DASHBOARD SCREEN
+    =========================================================== -->
+        <section
+          id="adminWelcomeSection"
+          class="admin-welcome"
+          style="display: none"
+        >
+          <!-- Top header bar -->
+          <header class="dash-header">
+            <div>
+              <h2 class="dash-welcome">
+                Welcome, <span id="welcomeAdminName">Admin</span>
+              </h2>
+              <p class="welcome-sub">
+                Manage workflow patterns, SOPs, and detection rules.
+              </p>
+            </div>
+            <button id="topbarLogoutBtn" class="topbar-logout">Logout</button>
+          </header>
+
+          <div class="dashboard-content">
+            <!-- ── Stat cards ── -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-icon wf-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M3 5h14M3 10h14M3 15h8"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+                <div class="label">Workflows</div>
+                <div class="value" id="statWorkflows">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon rule-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M9 4l1.5 3.5L14 9l-3.5 1.5L9 14l-1.5-3.5L4 9l3.5-1.5z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                  </svg>
+                </div>
+                <div class="label">Rules</div>
+                <div class="value" id="statRules">0</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon depth-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M10 3v14M5 8l5-5 5 5"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="label">Scan Depth</div>
+                <div class="value" id="statDepth">–</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon files-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M4 4h8l4 4v8H4V4z"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M12 4v4h4"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                  </svg>
+                </div>
+                <div class="label">Max Files</div>
+                <div class="value" id="statFiles">–</div>
+              </div>
+              <div class="stat-card accent-green">
+                <div class="stat-icon runs-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="7"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <path
+                      d="M10 6v4l3 2"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+                <div class="label">Total Runs</div>
+                <div class="value" id="statTotalRunsDash">–</div>
+              </div>
+              <div class="stat-card accent-blue">
+                <div class="stat-icon comp-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M4 10l5 5 7-8"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <div class="label">Completed</div>
+                <div class="value" id="statCompletedDash">–</div>
+              </div>
+              <div class="stat-card accent-red">
+                <div class="stat-icon fail-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <path
+                      d="M6 6l8 8M14 6l-8 8"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+                <div class="label">Failed</div>
+                <div class="value" id="statFailedDash">–</div>
+              </div>
+              <div class="stat-card accent-amber">
+                <div class="stat-icon cancel-icon">
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                    <circle
+                      cx="10"
+                      cy="10"
+                      r="7"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                    />
+                    <path
+                      d="M10 6v5"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <circle cx="10" cy="14" r="0.8" fill="currentColor" />
+                  </svg>
+                </div>
+                <div class="label">Cancelled</div>
+                <div class="value" id="statCancelledDash">–</div>
+              </div>
+            </div>
+
+            <!-- ── Quick actions ── -->
+            <div class="action-grid">
+              <div class="action-card primary">
+                <div class="action-card-icon">📁</div>
+                <div class="action-card-body">
+                  <h3>Workflow Manager</h3>
+                  <p>
+                    Create and manage workflows, rules, SOPs, and scoring logic.
+                  </p>
+                  <button id="openWorkflowFromDashboard">
+                    Open Workflow Pattern Manager
+                  </button>
+                </div>
+              </div>
+              <div class="action-card">
+                <div class="action-card-icon">⚙</div>
+                <div class="action-card-body">
+                  <h3>Scan Settings</h3>
+                  <p>Configure global scan depth and file limits.</p>
+                  <button id="openScanFromDashboard">
+                    Configure Scan Settings
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Charts row ── -->
+            <div class="charts-row">
+              <!-- Chart 1: Audit trends line -->
+              <div class="chart-card chart-card-wide">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">
+                    <span class="chart-dot dot-blue"></span>
+                    Audit trends over time
+                  </div>
+                  <span class="chart-badge" id="chartBadgeTrend">–</span>
+                </div>
+                <canvas id="auditChart" height="90"></canvas>
+              </div>
+
+              <!-- Chart 2: Status donut -->
+              <div class="chart-card chart-card-narrow">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">
+                    <span class="chart-dot dot-multi"></span>
+                    Status breakdown
+                  </div>
+                </div>
+                <div class="donut-wrap">
+                  <canvas id="statusDonutChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Second charts row ── -->
+            <div class="charts-row">
+              <!-- Chart 3: Daily volume bar -->
+              <div class="chart-card chart-card-half">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">
+                    <span class="chart-dot dot-green"></span>
+                    Daily file volume
+                  </div>
+                </div>
+                <canvas id="fileVolumeChart" height="110"></canvas>
+              </div>
+
+              <!-- Chart 4: Top users bar -->
+              <div class="chart-card chart-card-half">
+                <div class="chart-card-header">
+                  <div class="chart-card-title">
+                    <span class="chart-dot dot-amber"></span>
+                    Runs per user
+                  </div>
+                </div>
+                <canvas id="userRunsChart" height="110"></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================================
+         WORKFLOW PATTERN MANAGER
+    =========================================================== -->
+        <section id="adminDashboard" style="display: none">
+          <header class="admin-header">
+            <div>
+              <h2>Workflow Pattern Manager</h2>
+              <p class="welcome-sub">
+                Define SOPs and rules to auto-detect workflows.
+              </p>
+            </div>
+            <div class="admin-header-actions"></div>
+          </header>
+
+          <main class="workflow-manager">
+            <!-- Search -->
+            <div class="workflow-search-center">
+              <input
+                type="text"
+                id="workflowSearchInput"
+                placeholder="🔍 Search workflows..."
+                autocomplete="off"
+              />
+            </div>
+
+            <h2 class="workflow-title">Workflows</h2>
+
+            <!-- Create workflow -->
+            <div class="wf-create-box">
+              <input
+                id="newWorkflowName"
+                type="text"
+                placeholder="Enter workflow name (e.g. 'SharePoint Export')"
+              />
+              <button id="createWorkflowBtn" class="primary-btn">
+                ➕ Create Workflow
+              </button>
+            </div>
+
+            <p id="workflowError"></p>
+
+            <div id="workflowCards"></div>
+          </main>
+        </section>
+
+        <!-- ==========================================================
+         SCAN SETTINGS
+    =========================================================== -->
+        <section id="scanSettingsPanel" class="hidden scan-page">
+          <header class="admin-header">
+            <div>
+              <h2>Scan Settings</h2>
+              <p class="welcome-sub">
+                Configure global scan limits applied to all workflows.
+              </p>
+            </div>
+          </header>
+
+          <div class="scan-settings-body">
+            <div id="scanSettingsMessage" style="display: none"></div>
+
+            <div class="scan-card">
+              <label>
+                Max Folder Depth
+                <span
+                  class="info-bubble"
+                  data-info="You can have Maximum 25 folder levels to scan."
+                  >ℹ</span
+                >
+              </label>
+              <input
+                type="number"
+                id="scanDepthInput"
+                min="1"
+                max="25"
+                placeholder="e.g. 3"
+              />
+            </div>
+
+            <div class="scan-card">
+              <label>
+                Max Files per Folder
+                <span
+                  class="info-bubble"
+                  data-info="Limits how many files are scanned in each folder (MAX of 500)"
+                  >ℹ</span
+                >
+              </label>
+              <input
+                type="number"
+                id="scanFilesInput"
+                min="1"
+                max="500"
+                placeholder="e.g. 500"
+              />
+            </div>
+
+            <div class="scan-actions">
+              <button id="saveScanSettings" class="primary-btn">
+                💾 Save Scan Settings
+              </button>
+
+              <div id="scanStatusCard" class="scan-status-card hidden">
+                <div id="scanStatusMessage" class="scan-status-message"></div>
+                <div class="scan-status-meta">
+                  <span id="scanUpdatedAt"></span>
+                  <span id="scanUpdatedBy"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==========================================================
+         AUDIT LOGS
+    =========================================================== -->
+        <section id="auditPanel" style="display: none">
+          <!-- Header -->
+          <header class="audit-header">
+            <div class="audit-header-left">
+              <h2>Audit Logs</h2>
+              <p class="subtext">System-wide scan activity — super user only</p>
+            </div>
+            <div class="audit-header-actions">
+              <button id="refreshAuditBtn" class="audit-action-btn">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M4 10a6 6 0 1 0 1.2-3.6"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                  />
+                  <path
+                    d="M4 5v3h3"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                Refresh
+              </button>
+              <button id="exportAuditCSVBtn" class="audit-action-btn primary">
+                <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+                  <path
+                    d="M10 3v10M6 9l4 4 4-4"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M4 16h12"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Export CSV
+              </button>
+            </div>
+          </header>
+
+          <!-- Summary stats -->
+          <div class="audit-stats-bar">
+            <div class="audit-stat-card">
+              <div class="audit-stat-label">Total runs</div>
+              <div class="audit-stat-value" id="statTotalRuns">—</div>
+            </div>
+            <div class="audit-stat-card">
+              <div class="audit-stat-label">Completed</div>
+              <div class="audit-stat-value success" id="statCompleted">—</div>
+            </div>
+            <div class="audit-stat-card">
+              <div class="audit-stat-label">Failed</div>
+              <div class="audit-stat-value danger" id="statFailed">—</div>
+            </div>
+            <div class="audit-stat-card">
+              <div class="audit-stat-label">Cancelled</div>
+              <div class="audit-stat-value warning" id="statCancelled">—</div>
+            </div>
+          </div>
+
+          <!-- Collapsible audit storage config -->
+          <div class="audit-info-box">
+            <div id="auditConfigHeader" class="audit-config-header">
+              <div class="audit-config-title">Audit storage configuration</div>
+              <div id="auditToggleIcon" class="audit-toggle-icon">▾</div>
+            </div>
+
+            <div id="auditConfigBody" class="audit-config-body collapsed">
+              <div class="audit-storage-grid">
+                <div class="audit-storage-card">
+                  <div class="audit-storage-label">Region config</div>
+                  <div class="audit-storage-path" id="configPath">—</div>
+                </div>
+                <div class="audit-storage-card">
+                  <div class="audit-storage-label">Local audit</div>
+                  <div class="audit-storage-path" id="localAuditPath">—</div>
+                </div>
+                <div class="audit-storage-card">
+                  <div class="audit-storage-label">Region audit</div>
+                  <div class="audit-storage-path" id="regionAuditPath">—</div>
+                </div>
+              </div>
+
+              <table class="audit-path-table" style="margin-top: 16px">
+                <thead>
+                  <tr>
+                    <th>Region</th>
+                    <th>Path</th>
+                    <th>Status</th>
+                    <th>Last Modified</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="auditPathTableBody"></tbody>
+              </table>
+
+              <p class="audit-note">
+                <strong>Note:</strong> The network path can only be edited from
+                US machines and is not editable from other regions.
+              </p>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="audit-filters">
+            <div class="audit-filter-input-wrap">
+              <svg class="audit-filter-icon" viewBox="0 0 20 20" fill="none">
+                <circle
+                  cx="9"
+                  cy="9"
+                  r="5.5"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                />
+                <path
+                  d="M13 13l3 3"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <input id="filterUser" placeholder="User" />
+            </div>
+            <div class="audit-filter-input-wrap">
+              <svg class="audit-filter-icon" viewBox="0 0 20 20" fill="none">
+                <circle
+                  cx="9"
+                  cy="9"
+                  r="5.5"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                />
+                <path
+                  d="M13 13l3 3"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <input id="filterMachine" placeholder="Machine" />
+            </div>
+            <div class="audit-filter-input-wrap">
+              <svg class="audit-filter-icon" viewBox="0 0 20 20" fill="none">
+                <circle
+                  cx="9"
+                  cy="9"
+                  r="5.5"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                />
+                <path
+                  d="M13 13l3 3"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <input id="filterAlpha" placeholder="Alpha code" />
+            </div>
+            <div class="audit-filter-input-wrap">
+              <svg class="audit-filter-icon" viewBox="0 0 20 20" fill="none">
+                <circle
+                  cx="9"
+                  cy="9"
+                  r="5.5"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                />
+                <path
+                  d="M13 13l3 3"
+                  stroke="currentColor"
+                  stroke-width="1.4"
+                  stroke-linecap="round"
+                />
+              </svg>
+              <input id="filterTask" placeholder="Task / SD number" />
+            </div>
+          </div>
+
+          <!-- Audit table -->
+          <div class="audit-table-container">
+            <table id="auditTable" class="audit-table">
+              <thead>
+                <tr>
+                  <th>Run time</th>
+                  <th>User</th>
+                  <th>Machine</th>
+                  <th>Alpha</th>
+                  <th>Task</th>
+                  <th>Files</th>
+                  <th>Size</th>
+                  <th>Status</th>
+                  <th>Detected workflows</th>
+                  <th>Used workflows</th>
+                  <th>Analysis paths</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody"></tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="audit-pagination">
+              <span
+                class="audit-pagination-info"
+                id="auditPaginationInfo"
+              ></span>
+              <div class="audit-pagination-btns" id="auditPaginationBtns"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <!-- end .admin-main -->
+    </div>
+    <!-- end #adminApp -->
+
+    <!-- ============================================================
+     FOOTER
+============================================================= -->
+    <footer class="app-footer">
+      <div class="footer-container">
+        <span>© 2026 Media Analysis Dashboard</span>
+        <span>Workflow Intelligence Suite and Audit Space</span>
+        <span>Built by <strong>Consilio DataOps</strong></span>
+      </div>
+    </footer>
+
+    <!-- ============================================================
+     TEMPLATES
+============================================================= -->
+
+    <!-- Workflow card -->
+    <template id="workflowCardTemplate">
+      <div class="workflow-card" data-wf="{{wfIndex}}">
+        <!-- HEADER ZONE -->
+        <div class="workflow-card-header">
+          <div>
+            <h3 class="wf-name"></h3>
+            <span class="wf-rule-count">
+              <span class="wf-rule-count-dot"></span>
+              <span class="wf-rule-count-text"></span>
+            </span>
+          </div>
+          <button
+            class="wf-delete danger-btn"
+            title="Delete workflow"
+            style="
+              width: 28px;
+              height: 28px;
+              padding: 0;
+              font-size: 13px;
+              border-radius: 6px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              flex-shrink: 0;
+            "
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- BODY ZONE -->
+        <div class="workflow-card-body">
+          <!-- Timestamps -->
+          <div class="wf-updated"></div>
+
+          <div class="wf-card-divider"></div>
+
+          <!-- SOP section -->
+          <div class="wf-sop-container">
+            <div class="wf-rules-label">SOP Links</div>
+            <div class="wf-sop-list"></div>
+            <div
+              class="wf-sop-add-box"
+              style="display: none; margin-top: 6px; gap: 6px"
+            ></div>
+            <button class="wf-add-sop wf-add-sop-btn">+ Add SOP</button>
+            <div
+              class="wf-sop-error"
+              style="
+                display: none;
+                color: #d93025;
+                font-size: 11px;
+                margin-top: 4px;
+              "
+            ></div>
+          </div>
+
+          <div class="wf-card-divider"></div>
+
+          <!-- Rules list -->
+          <div class="wf-rules-section">
+            <div class="wf-rules-label">Detection rules</div>
+            <div class="wf-rule-list"></div>
+          </div>
+
+          <!-- Overlay checkbox -->
+          <div class="wf-overlay-row">
+            <input type="checkbox" class="wf-overlay-required" />
+            <span class="wf-overlay-label"
+              >Overlay required for this workflow</span
+            >
+          </div>
+
+          <!-- Inline rename bar -->
+          <div class="wf-rename-box" style="display: none"></div>
+
+          <!-- Inline delete confirm bar -->
+          <div class="wf-delete-confirm" style="display: none"></div>
+        </div>
+        <!-- end .workflow-card-body -->
+
+        <!-- FOOTER ZONE -->
+        <div class="workflow-card-footer">
+          <button class="wf-add-rule wf-action-btn add-rule-btn">
+            + Add Rule
+          </button>
+          <button class="wf-rename wf-action-btn rename-btn">✎ Rename</button>
+          <button class="wf-delete wf-action-btn delete-wf-btn">
+            ✕ Delete
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- SOP row -->
+    <template id="sopRowTemplate">
+      <div class="sop-row">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 20 20"
+          fill="none"
+          style="flex-shrink: 0; color: #6b7280"
+        >
+          <path
+            d="M4 4h8l4 4v8H4V4z"
+            stroke="currentColor"
+            stroke-width="1.4"
+            stroke-linejoin="round"
+          />
+          <path d="M12 4v4h4" stroke="currentColor" stroke-width="1.4" />
+        </svg>
+        <a class="wf-sop-link" target="_blank" rel="noopener noreferrer"></a>
+        <button class="sop-remove-btn wf-sop-remove" title="Remove SOP">
+          ✕
+        </button>
+      </div>
+    </template>
+
+    <!-- SOP add box -->
+    <template id="sopAddBoxTemplate">
+      <div class="sop-add-inner" style="display: flex; gap: 6px">
+        <input
+          type="text"
+          class="wf-sop-input"
+          placeholder="Enter SOP link or path"
+        />
+        <button
+          class="primary-btn wf-sop-save"
+          style="font-size: 11px; padding: 4px 6px"
+        >
+          Save
+        </button>
+        <button
+          class="secondary-btn wf-sop-cancel"
+          style="font-size: 11px; padding: 4px 6px"
+        >
+          Cancel
+        </button>
+      </div>
+    </template>
+
+    <!-- Rule row -->
+    <template id="ruleRowTemplate">
+      <div class="wf-rule-row">
+        <div class="wf-rule-main">
+          <span class="wf-rule-text"></span>
+        </div>
+        <div class="wf-rule-meta">
+          <span class="wf-rule-meta-text"></span>
+          <span class="wf-pill wf-rule-tier"></span>
+        </div>
+        <div class="wf-rule-actions">
+          <button class="wf-edit wf-rule-btn" title="Edit rule">✎</button>
+          <button class="wf-delete-rule wf-rule-btn del" title="Delete rule">
+            ✕
+          </button>
+        </div>
+        <div
+          class="wf-rule-confirm"
+          style="
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+          "
+        >
+          <span style="font-size: 12px; color: #374151">Delete this rule?</span>
+          <button
+            class="wf-confirm-del danger-btn"
+            style="padding: 4px 10px; font-size: 12px"
+          >
+            Yes
+          </button>
+          <button
+            class="wf-cancel-del secondary-btn"
+            style="padding: 4px 10px; font-size: 12px"
+          >
+            No
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- No SOP placeholder -->
+    <template id="noSopTemplate">
+      <div style="font-size: 12px; color: #9ca3af; padding: 6px 0">
+        No SOP links added yet.
+      </div>
+    </template>
+
+    <!-- No rules placeholder -->
+    <template id="noRulesTemplate">
+      <div style="font-size: 12px; color: #9ca3af; padding: 6px 0">
+        No rules yet. Click <strong>+ Add Rule</strong> to begin.
+      </div>
+    </template>
+
+    <!-- Rename workflow -->
+    <template id="renameWorkflowTemplate">
+      <div
+        class="rename-box-inner"
+        style="display: flex; flex-direction: column; gap: 6px"
+      >
+        <input
+          type="text"
+          class="wf-rename-input"
+          placeholder="New workflow name"
+        />
+        <div class="wf-rename-error" style="display: none"></div>
+        <div class="wf-rename-btns" style="display: flex; gap: 6px">
+          <button class="secondary-btn wf-rename-cancel">Cancel</button>
+          <button class="primary-btn wf-rename-save">Save</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- Delete workflow confirm -->
+    <template id="deleteWorkflowTemplate">
+      <div
+        class="del-box-inner"
+        style="display: flex; flex-direction: column; gap: 6px"
+      >
+        <span>Delete this workflow?</span>
+        <div class="wf-del-btns" style="display: flex; gap: 6px">
+          <button class="secondary-btn wf-del-cancel">No</button>
+          <button class="danger-btn wf-del-yes">Yes</button>
+        </div>
+      </div>
+    </template>
+
+    <!-- ============================================================
+     RULE MODAL
+============================================================= -->
+    <div id="infoTooltip" class="info-tooltip"></div>
+
+    <div id="ruleModalOverlay" class="modal-overlay" style="display: none">
+      <div class="modal">
+        <h3 id="ruleModalTitle">Add Rule</h3>
+
+        <div class="modal-body">
+          <!-- Workflow name (read-only) -->
+          <div class="modal-field">
+            <label>Workflow Name</label>
+            <input type="text" id="modalWorkflowName" disabled />
+          </div>
+
+          <!-- Rule conditions -->
+          <div class="modal-field">
+            <label>
+              Rule Conditions *
+              <span
+                class="info-bubble"
+                data-info="Add one or more patterns to define this rule.
+• AND – all conditions must match
+• OR – any condition can match
+• AND NOT – exclude matching items
+Conditions are evaluated left → right.
+AND does not run before OR.
+
+Example:
+A AND B OR C
+is evaluated as
+(A AND B) OR C
+
+For grouped logic, use separate rules."
+                >ℹ</span
+              >
+            </label>
+            <div id="ruleConditionsContainer" class="rule-conditions"></div>
+            <button
+              type="button"
+              id="addConditionBtn"
+              class="btn-secondary"
+              style="margin-top: 6px"
+            >
+              <span class="plus">+</span>Add condition
+            </button>
+          </div>
+
+          <!-- Regex examples (collapsible) -->
+          <div class="example-box">
+            <div
+              class="example-header"
+              onclick="this.parentNode.classList.toggle('open')"
+            >
+              <span>🔍 Show Pattern Examples For RegEX</span>
+              <span class="arrow">▼</span>
+            </div>
+            <div class="example-content">
+              <strong>Regex &amp; Pattern Examples:</strong>
+              <ul>
+                <li>
+                  <code>client_[A-Za-z0-9]+</code> → Matches <b>Client_ABC01</b>
+                </li>
+                <li>
+                  <code>client_[A-Za-z0-9]+$</code> → Folder names ending with
+                  this
+                </li>
+                <li><code>report_[0-9]{4}</code> → <b>report_2024</b></li>
+                <li><code>[A-Za-z]+\.pdf$</code> → Any PDF</li>
+                <li><code>(invoice|receipt)</code> → invoice OR receipt</li>
+                <li><code>^[A-Za-z0-9._-]+\.txt$</code> → Strict .txt</li>
+                <li><code>\.zip$</code> → .zip files</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Tier -->
+          <div class="modal-field">
+            <label>
+              Tier
+              <span
+                class="info-bubble"
+                data-info="primary → strongest
+secondary → medium
+tertiary → weakest"
+                >ℹ</span
+              >
+            </label>
+            <select id="modalTier">
+              <option value="primary">primary</option>
+              <option value="secondary">secondary</option>
+              <option value="tertiary">tertiary</option>
+            </select>
+          </div>
+
+          <!-- Score -->
+          <div class="modal-field">
+            <label>
+              Score (1–100)
+              <span
+                class="info-bubble"
+                data-info="Higher score = stronger influence"
+                >ℹ</span
+              >
+            </label>
+            <input type="number" id="modalScore" min="1" max="100" />
+          </div>
+
+          <!-- Advanced rules toggle -->
+          <div style="margin: 10px 0; padding: 8px 0">
+            <label style="font-size: 13px; cursor: pointer">
+              <input
+                type="checkbox"
+                id="enableAdvancedRules"
+                style="margin-right: 6px"
+              />
+              <strong>Enable Advanced Rules (RegEx)</strong>
+              <span
+                class="info-bubble"
+                data-info="Use only if you understand RegEx.
+Examples:
+• ^MED.*\.pdf$
+• (json|xml)$"
+                >ℹ</span
+              >
+            </label>
+          </div>
+
+          <p id="ruleModalError"></p>
+        </div>
+
+        <div class="modal-footer">
+          <button id="ruleCancelBtn" class="secondary-btn">Cancel</button>
+          <button id="ruleSaveBtn" class="primary-btn">Save Rule</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+     SUPER USER LOGIN MODAL
+============================================================= -->
+    <div id="superUserModal" class="modal-overlay hidden">
+      <div class="modal" style="max-width: 420px">
+        <h3>🔐 Super User Login</h3>
+        <p class="welcome-sub">Audit Access Only</p>
+
+        <div class="modal-body">
+          <input
+            type="password"
+            id="superUserPIN"
+            placeholder="Enter Super User PIN"
+          />
+          <p
+            id="superUserError"
+            style="color: #d93025; display: none; margin-top: 8px"
+          ></p>
+        </div>
+
+        <div class="modal-footer">
+          <button id="superUserLoginBtn" class="primary-btn">Login</button>
+          <button id="superUserCancelBtn" class="secondary-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+     AUDIT DETAILS MODAL
+============================================================= -->
+    <div id="auditDetailsModal" class="modal-overlay hidden">
+      <div class="modal">
+        <header class="modal-header">
+          <h3>Audit Run Details</h3>
+          <button id="closeAuditModal" class="modal-close">✕</button>
+        </header>
+
+        <div class="modal-body" id="auditDetailsBody">
+          <!-- Populated dynamically -->
+        </div>
+
+        <footer class="modal-footer">
+          <button id="closeAuditModalFooter" class="secondary-btn">
+            Close
+          </button>
+        </footer>
+      </div>
+    </div>
+
+    <!-- ============================================================
+     SCRIPTS
+============================================================= -->
+    <script src="assets/bootstrap/bootstrap.bundle.min.js"></script>
+    <script src="assets/vendor/chart.js"></script>
+    <script src="js/admin/admin.js"></script>
+  </body>
+</html>

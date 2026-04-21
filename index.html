@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Security headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="Referrer-Policy" content="no-referrer" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+
+    <!-- Content Security Policy: local assets only -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+          default-src 'self';
+          script-src  'self' 'unsafe-inline';
+          style-src   'self' 'unsafe-inline';
+          img-src     'self' data:;
+          connect-src 'self';
+          font-src    'self';
+          object-src  'none';
+          base-uri    'self';
+          form-action 'self';
+        "
+    />
+
+    <title>Media Analysis Dashboard</title>
+
+    <!-- Stylesheets (local only) -->
+    <link rel="stylesheet" href="assets/bootstrap/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+    <link rel="stylesheet" href="assets/vendor/tom-select.css" />
+  </head>
+  <body>
+    <!-- ============================================================
+     APP HEADER
+============================================================= -->
+    <header class="app-header">
+      <div class="logo-container">
+        <img
+          src="assets/logos/consilio-logo.gif"
+          class="app-logo"
+          alt="Consilio Logo"
+        />
+        <span class="app-title">MEDIA ANALYSIS DASHBOARD</span>
+      </div>
+    </header>
+
+    <div class="container">
+      <!-- ==========================================================
+       SECTION 1 — BASIC INFORMATION
+  =========================================================== -->
+      <div class="section-card">
+        <h2>Basic Information</h2>
+
+        <label>Data Type <span style="color: red">*</span></label>
+        <select id="datatype"></select>
+
+        <label>Alpha Code <span style="color: red">*</span></label>
+        <input type="text" id="alphaCode" maxlength="7" />
+
+        <label>Task / SD Number <span style="color: red">*</span></label>
+        <input type="text" id="taskNumber" maxlength="15" />
+
+        <h2>Project Restrictions <span style="color: red">*</span></h2>
+        <select id="projectRestrictionsRequired">
+          <option value="">Select Project Restriction</option>
+
+          <optgroup label="General">
+            <option value="None">None</option>
+            <option value="Custom Restricted">Custom Restricted</option>
+            <option value="No Contractors">No Contractors</option>
+            <option value="Confidentiality Ring Restricted">
+              Confidentiality Ring Restricted
+            </option>
+          </optgroup>
+
+          <optgroup label="Country / Region Restricted">
+            <option value="China Restricted">China Restricted</option>
+            <option value="Germany Restricted">Germany Restricted</option>
+            <option value="DE Restricted">DE Restricted</option>
+            <option value="EU Restricted">EU Restricted</option>
+            <option value="EU/US Restricted">EU/US Restricted</option>
+            <option value="HK Restricted">HK Restricted</option>
+            <option value="Japan Restricted">Japan Restricted</option>
+            <option value="India Restricted">India Restricted</option>
+            <option value="USA/PRC Restricted">USA / PRC Restricted</option>
+            <option value="UK Restricted">UK Restricted</option>
+            <option value="US Restricted">US Restricted</option>
+            <option value="Canada Restricted">Canada Restricted</option>
+            <option value="France Restricted">France Restricted</option>
+            <option value="Switzerland Restricted">
+              Switzerland Restricted
+            </option>
+            <option value="UK-GOV Restricted">UK-GOV Restricted</option>
+          </optgroup>
+
+          <optgroup label="Data &amp; Regulatory">
+            <option value="ITAR Restricted">ITAR Restricted</option>
+            <option value="EUPD">
+              EUPD – European Union Personal Data (non-Germany) Restricted
+            </option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- ==========================================================
+       SECTION 2 — EXTRACTED FOLDERS
+  =========================================================== -->
+      <div class="section-card">
+        <h2>Extracted Folders <span style="color: red">*</span></h2>
+
+        <div id="folderContainer"></div>
+
+        <div
+          id="savePathText"
+          style="margin-top: 10px; font-weight: bold"
+        ></div>
+        <div
+          id="scanWarnings"
+          class="warning-msg"
+          style="margin-top: 10px"
+        ></div>
+
+        <button
+          id="saveScanFilesBtn"
+          class="add-btn"
+          data-action="start-scan"
+          style="margin-top: 10px"
+        >
+          ⚡ File Analysis
+        </button>
+
+        <div
+          id="saveValidationMsg"
+          class="error-msg"
+          style="display: none"
+        ></div>
+
+        <div id="scanStatus" style="margin-top: 10px; font-weight: bold"></div>
+
+        <button
+          id="cancelFileAnalysisBtn"
+          class="btn btn-danger"
+          style="display: none"
+        >
+          ❌ Cancel File Analysis
+        </button>
+        <span id="fileAnalysisStatus"></span>
+
+        <button
+          id="showResultsBtn"
+          class="add-btn"
+          style="display: none; margin-top: 10px"
+        >
+          📊 View Details
+        </button>
+      </div>
+
+      <!-- ==========================================================
+       FULL FILE COUNT ANALYSIS CARD
+  =========================================================== -->
+      <div
+        id="fullScanCard"
+        class="section-card"
+        style="display: none; margin-top: 15px"
+      >
+        <h2>📊 File Counting Analysis</h2>
+
+        <div id="fullScanStatus" style="font-weight: bold; margin-bottom: 6px">
+          ⏳ File counting analysis is running…
+        </div>
+
+        <div id="fullScanProgress" class="scan-progress">
+          <div class="scan-progress-bar"></div>
+        </div>
+
+        <button
+          id="cancelFileCountingBtn"
+          class="btn btn-danger"
+          style="display: none"
+        >
+          ❌ Cancel File Counting
+        </button>
+
+        <div id="fileCountingStatus" class="status-info"></div>
+        <div id="fileCountingEstimate" class="status-subtle"></div>
+
+        <div id="fullScanResult" style="display: none; margin-top: 14px">
+          <!-- Stats row -->
+          <div class="scan-stats-row">
+            <div class="scan-stat-box">
+              <div class="stat-label">Total Files</div>
+              <div class="stat-value" id="totalFiles">—</div>
+            </div>
+            <div class="scan-stat-box">
+              <div class="stat-label">Size (GB)</div>
+              <div class="stat-value" id="totalSizeGB">—</div>
+            </div>
+            <div class="scan-stat-box">
+              <div class="stat-label">Size (Bytes)</div>
+              <div class="stat-value small" id="totalSizeBytes">—</div>
+            </div>
+          </div>
+
+          <hr class="stats-divider" />
+
+          <!-- Extensions -->
+          <div class="scan-extensions">
+            <b>Extensions:</b>
+            <div id="extensionsBox" class="extensions-box"></div>
+            <button
+              id="toggleExtensionsBtn"
+              class="extensions-toggle-btn"
+              style="display: none"
+            >
+              Show more
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================================
+       SECTION 3 — SCREENSHOT PASTE
+  =========================================================== -->
+      <div class="section-card">
+        <h2>Pasted Screenshots</h2>
+
+        <div id="pastePlaceholderMount"></div>
+
+        <div
+          id="imagePreviewContainer"
+          style="display: flex; flex-wrap: wrap; gap: 10px"
+        ></div>
+        <div id="pasteError" class="validation-error"></div>
+      </div>
+
+      <!-- ==========================================================
+       SECTION 4 — WORKFLOW
+  =========================================================== -->
+      <div class="section-card">
+        <h2>Detected Workflow(s)</h2>
+        <div id="workflowResult" style="margin-bottom: 10px"></div>
+
+        <div
+          id="workflowInfoNotice"
+          class="workflow-info system-detected"
+          style="display: none"
+        >
+          <span class="workflow-info-icon">⚠️</span>
+          <div class="workflow-info-text">
+            <strong>System-Detected Workflow(s)</strong><br />
+            The workflow(s) listed above were automatically identified based on
+            folder structure and file analysis. Please review and confirm the
+            workflow(s) actually used below.
+          </div>
+        </div>
+
+        <h2>Workflows Used <span style="color: red">*</span></h2>
+        <select id="workflowUsed" multiple></select>
+      </div>
+
+      <!-- ==========================================================
+       SECTION 5 — OVERLAY
+  =========================================================== -->
+      <div class="section-card">
+        <h2>Overlay Required? <span style="color: red">*</span></h2>
+
+        <select id="overlayRequired">
+          <option value="">Select</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+
+        <div
+          id="overlaySystemNotice"
+          class="workflow-info system-detected"
+          style="display: none"
+        ></div>
+        <div id="overlayRequiredError" class="validation-error"></div>
+
+        <div id="overlaySection"></div>
+      </div>
+
+      <!-- ==========================================================
+       SECTION 6 — MEDIA DETAILS + SOP
+  =========================================================== -->
+      <div class="section-card">
+        <h2>Media Details</h2>
+        <textarea id="mediaDetails"></textarea>
+
+        <h2>SOP Information <span style="color: red">*</span></h2>
+        <div id="sopLinksContainer" class="sop-box"></div>
+
+        <br />
+
+        <div class="admin-row">
+          <div class="pdf-tooltip-wrapper">
+            <button class="btn" id="generatePdfBtn">Generate PDF</button>
+            <div class="pdf-tooltip">
+              <strong>Save Location</strong><br />
+              Please save the PDF report to the network location as showed in
+              the below example.<br /><br />
+              <b>Example:</b><br />
+              \\hlnas01\data\A00000\source\SourceMedia\SAFEID1\_MediaAnalysis\A00000_SDXXXXX_Media_Analysis_Report.pdf<br /><br />
+              <b>Do not save</b> to Downloads, Desktop, or the C:\ drive.
+            </div>
+          </div>
+
+          <a href="admin.html" id="adminLoginBtn" class="admin-login-link">
+            🔐 Admin Login
+          </a>
+        </div>
+      </div>
+    </div>
+    <!-- end .container -->
+
+    <!-- ============================================================
+     FOOTER
+============================================================= -->
+    <footer class="main-footer">
+      <div class="main-footer-container">
+        <span>© 2026 Media Analysis Dashboard</span>
+        <span>Built by <strong>Consilio DataOps</strong></span>
+      </div>
+    </footer>
+
+    <!-- ============================================================
+     TEMPLATES
+     (Scan, Workflow, Validation, Folder, Paste, Overlay)
+============================================================= -->
+
+    <!-- Scan results table -->
+    <template id="scanResultsTemplate">
+      <div id="scanResultsContainer" class="scan-results">
+        <div class="results-table-wrapper">
+          <table class="results-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Folder Path</th>
+                <th>File Name</th>
+                <th>Full Path</th>
+                <th>Size (KB)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="pagination-controls">
+          <button class="prevPageBtn">⬅ Prev</button>
+          <span class="pageInfo">Page 1 / 1</span>
+          <button class="nextPageBtn">Next ➡</button>
+          <select class="rowsPerPage">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+        <button class="closeResultsBtn add-btn">🧹 Close Table</button>
+      </div>
+    </template>
+
+    <!-- File row -->
+    <template id="fileRowTemplate">
+      <tr>
+        <td class="col-index"></td>
+        <td class="col-folder"></td>
+        <td class="col-name"></td>
+        <td class="col-path"></td>
+        <td class="col-size"></td>
+      </tr>
+    </template>
+
+    <!-- No results -->
+    <template id="noResultsTemplate">
+      <div class="no-results">⚠ No files found in scanned folders.</div>
+    </template>
+
+    <!-- Detected workflow box -->
+    <template id="workflowDetectedTemplate">
+      <div class="detected-workflow-box"></div>
+    </template>
+
+    <!-- SOP card -->
+    <template id="sopCardTemplate">
+      <div class="sop-card">
+        <div class="sop-card-title"></div>
+        <div class="sop-card-links"></div>
+      </div>
+    </template>
+
+    <!-- SOP link -->
+    <template id="sopLinkTemplate">
+      <a class="sop-link-item" target="_blank" rel="noopener noreferrer"
+        >📄 Open SOP</a
+      >
+    </template>
+
+    <!-- Validation messages -->
+    <template id="errorTemplate">
+      <div class="validation-error"></div>
+    </template>
+
+    <template id="infoTemplate">
+      <div class="validation-info"></div>
+    </template>
+
+    <!-- Folder textarea -->
+    <template id="folderTextareaTemplate">
+      <div id="folderTextareaWrapper">
+        <textarea
+          id="folderPathsArea"
+          placeholder="Paste multiple folder paths here...
+(Each line = one folder path)"
+        ></textarea>
+      </div>
+    </template>
+
+    <!-- Folder error -->
+    <template id="folderErrorTemplate">
+      <div id="folderError" class="validation-error"></div>
+    </template>
+
+    <!-- Overlay ticket -->
+    <template id="overlayTicketTemplate">
+      <div class="form-group" id="overlayTicketContainer">
+        <label for="overlayTicket">Overlay Ticket Number</label>
+        <input
+          type="text"
+          id="overlayTicket"
+          class="form-control"
+          maxlength="15"
+        />
+        <div id="overlayTicketError" class="validation-error"></div>
+      </div>
+    </template>
+
+    <!-- Paste drop zone -->
+    <template id="pastePlaceholderTemplate">
+      <div id="pasteDropZone" class="paste-zone" tabindex="0">
+        Click here and paste screenshot (CTRL+V)
+        <br />
+        Note: If you notice any discrepancies or delays in the file count above,
+        please cancel the process and paste the file count and file details
+        obtained from TreeSize for reference.
+      </div>
+    </template>
+
+    <!-- Paste thumbnail -->
+    <template id="pasteThumbTemplate">
+      <div class="thumb-container">
+        <img class="thumb-img" />
+        <button type="button" class="remove-btn">×</button>
+      </div>
+    </template>
+
+    <!-- Paste error -->
+    <template id="pasteErrorTemplate">
+      <div id="pasteError" class="validation-error"></div>
+    </template>
+
+    <!-- Data type options -->
+    <template id="datatypeOptionsTemplate">
+      <option value="">Select Data Type</option>
+      <option value="Standard NUIX">Standard NUIX</option>
+      <option value="Data Mapping">Data Mapping</option>
+    </template>
+
+    <!-- ============================================================
+     SCRIPTS (local only, load order matters)
+============================================================= -->
+    <script src="assets/vendor/tom-select.complete.min.js"></script>
+    <script src="assets/vendor/jspdf.umd.min.js"></script>
+    <script src="assets/vendor/jspdf.plugin.autotable.min.js"></script>
+    <script src="assets/bootstrap/bootstrap.bundle.min.js" defer></script>
+    <script src="js/validation.js"></script>
+    <!-- must load first -->
+    <script src="js/folders.js"></script>
+    <!-- depends on: cleanFolderPath -->
+    <script src="js/workflow.js"></script>
+    <script src="js/scan.js"></script>
+    <!-- depends on: warnMissingFolders -->
+    <script src="js/ui-init.js"></script>
+    <script src="js/paste.js"></script>
+    <script src="js/overlay.js"></script>
+    <script src="js/pdf.js"></script>
+    <script src="js/admin/admin.js"></script>
+  </body>
+</html>
