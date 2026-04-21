@@ -1,0 +1,40 @@
+{
+  "name": "media-analysis-dashboard",
+  "version": "1.0.0",
+  "description": "Media Analysis Tool",
+  "author": "NIHAR",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "com.media.analysis.dashboard",
+    "productName": "MediaAnalysisDashboard",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/*.dll",
+      "node_modules/electron/dist/*.dll"
+    ],
+    "forceCodeSigning": false,
+    "win": {
+      "target": [
+        "portable",
+        "nsis"
+      ],
+      "icon": "assets/logos/icon.ico",
+      "requestedExecutionLevel": "asInvoker"
+    }
+  },
+  "devDependencies": {
+    "electron": "^32.2.0",
+    "electron-builder": "^25.1.0"
+  }
+}
