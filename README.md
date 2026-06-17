@@ -30,8 +30,11 @@ npm run build
 ## 📁 Project Structure
 
 ```
-├── src/          # Source files
-├── dist/         # Build output
+├── dist/         # After running 'npm run build' command your output .exe file will be stored here
+├── assets/       # logos, bootstrap files and fonts
+├── css/          # css files
+├── js/           # Source files
+├── main.js       # main file
 ├── package.json  # Project configuration
 ```
 
